@@ -20,7 +20,7 @@ import utils.utils as utils
 parser = argparse.ArgumentParser(description='train hed model')
 parser.add_argument('--batchSize', type=int, default=1, help='with batchSize=1 equivalent to instance normalization.')
 parser.add_argument('--niter', type=int, default=15, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
+parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--momentum', type=float, help='momentum', default=0.9)
 parser.add_argument('--lr_decay', type=float, help='learning rate decay', default=0.1)
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
@@ -113,9 +113,27 @@ def bce2d(input, target):
     loss = F.binary_cross_entropy(log_p, target_trans, weight, size_average=True)
     return loss
 # criterion = nn.BCELoss()
+
+
+
 lr = opt.lr
+lr_conv5 = lr * 100
+lr_fuse= lr * 0.001
 # optimizer = torch.optim.Adam(net.parameters(),lr=lr, betas=(opt.beta1, 0.999))
-optimizer = torch.optim.SGD(net.parameters(),lr=lr, momentum=opt.momentum, weight_decay=0.0002)
+# optimizer = torch.optim.SGD(net.parameters(),lr=lr, momentum=opt.momentum, weight_decay=0.0002)
+## different learning rate
+conv5_params = list(map(id, net.conv5.parameters()))
+fuse_params = list(map(id, net.fuse.parameters()))
+
+base_params = filter(lambda p: id(p) not in conv5_params+fuse_params,
+                     net.parameters())
+
+optimizer = torch.optim.SGD([
+            {'params': base_params},
+            {'params': net.conv5.parameters(), 'lr': lr * 100},
+            {'params': net.fuse.parameters(), 'lr': lr * 0.001}
+            ], lr=lr, momentum=0.9)
+###
 
 ########### Training   ###########
 net.train()
@@ -160,7 +178,11 @@ for epoch in range(1,opt.niter+1):
 
     if epoch in lr_decay_epoch:
             lr *= lr_decay
-            optimizer = torch.optim.SGD(net.parameters(),lr=lr, momentum=opt.momentum, weight_decay=0.0002)
+            optimizer = torch.optim.SGD([
+                {'params': base_params},
+                {'params': net.conv5.parameters(), 'lr': lr * 100},
+                {'params': net.fuse.parameters(), 'lr': lr * 0.001}
+                ], lr=lr, momentum=0.9)
             # optimizer = torch.optim.Adam(net.parameters(),lr=lr, betas=(opt.beta1, 0.999))
 
     torch.save(net.state_dict(), '%s/hed_%d.pth' % (opt.outf, epoch))
