@@ -110,15 +110,13 @@ def bce2d(input, target):
     
     weight = torch.from_numpy(weight)
     weight = weight.cuda()
-    loss = F.binary_cross_entropy(log_p, target_trans, weight, size_average=True)
+    loss = F.binary_cross_entropy(log_p, target_t, weight, size_average=True)
     return loss
 # criterion = nn.BCELoss()
 
 
 
 lr = opt.lr
-lr_conv5 = lr * 100
-lr_fuse= lr * 0.001
 # optimizer = torch.optim.Adam(net.parameters(),lr=lr, betas=(opt.beta1, 0.999))
 # optimizer = torch.optim.SGD(net.parameters(),lr=lr, momentum=opt.momentum, weight_decay=0.0002)
 ## different learning rate
