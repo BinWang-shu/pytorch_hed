@@ -71,22 +71,21 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 net = HED()
+net.cuda()
+
 net.apply(weights_init)
 
 print ('load the weight from vgg')
 pretrained_dict = torch.load('vgg16.pth')
-pretrained_dict = utils.convert_vgg(pretrained_dict)
 model_dict = net.state_dict()
 # 1. filter out unnecessary keys
-#pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
 # 2. overwrite entries in the existing state dict
 model_dict.update(pretrained_dict) 
 # 3. load the new state dict
 net.load_state_dict(model_dict)
 print ('copy the weight sucessfully')
-
 print(net)
-net.cuda()
 
 ###########   LOSS & OPTIMIZER   ##########
 def bce2d(input, target):
