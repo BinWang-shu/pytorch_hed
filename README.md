@@ -12,4 +12,4 @@ You can get vgg16.pth by:
    mkdir checkpoints
    mkdir tmp
 ```
-I have got ODS=0.771 on BSDS500 dataset.
+I have got ODS=0.771 on BSDS500 dataset with Adam.
